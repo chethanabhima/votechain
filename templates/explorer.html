@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Blockchain Explorer — Vote Chain{% endblock %}
+
+{% block content %}
+<div class="explorer-page">
+  <div class="page-header">
+    <h2>⛓️ Blockchain Explorer</h2>
+    <p>Immutable ledger of all recorded votes — {{ blocks|length }} blocks total.</p>
+    <button class="btn btn-primary" id="verify-btn" onclick="verifyChain()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Verify Chain Integrity
+    </button>
+  </div>
+
+  <div id="verify-result" class="verify-banner" style="display:none"></div>
+
+  <div class="blocks-container">
+    {% for block in blocks %}
+    <div class="block-card glass {% if loop.first %}genesis{% endif %}">
+      <div class="block-header">
+        <div class="block-num">
+          {% if block.block_id == 0 %}
+            <span class="block-genesis-badge">GENESIS</span>
+          {% else %}
+            <span class="block-label">BLOCK</span>
+            <span class="block-id">#{{ block.block_id }}</span>
+          {% endif %}
+        </div>
+        <div class="block-time">{{ block.timestamp[:19].replace('T',' ') }} UTC</div>
+        <div class="block-sig-badge {{ 'sig-valid' if block.sig_status in ('VALID','GENESIS') else 'sig-invalid' }}">
+          {{ block.sig_status }}
+        </div>
+      </div>
+
+      <div class="block-body">
+        <div class="hash-row">
+          <span class="hash-label">Prev Hash</span>
+          <span class="hash-val mono">{{ block.previous_hash }}</span>
+        </div>
+        <div class="hash-row">
+          <span class="hash-label">Curr Hash</span>
+          <span class="hash-val mono accent">{{ block.current_hash }}</span>
+        </div>
+        {% if block.block_id != 0 %}
+        <div class="hash-row">
+          <span class="hash-label">Voter Hash</span>
+          <span class="hash-val mono">{{ block.voter_hash }}</span>
+        </div>
+        <div class="hash-row">
+          <span class="hash-label">Encrypted Vote</span>
+          <span class="hash-val mono truncate">{{ block.encrypted_vote[:60] }}…</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% if not loop.last %}
+    <div class="chain-link">⬇ linked by SHA-256</div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+{% block scripts %}
+<script>
+async function verifyChain() {
+  const btn = document.getElementById('verify-btn');
+  const result = document.getElementById('verify-result');
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+  try {
+    const res = await fetch('/api/verify-chain');
+    const data = await res.json();
+    result.style.display = 'block';
+    result.className = 'verify-banner ' + (data.valid ? 'verify-ok' : 'verify-fail');
+    result.innerHTML = `<strong>${data.valid ? '✓ Integrity Confirmed' : '✗ Integrity Failed'}</strong> — ${data.message}`;
+  } catch(e) {
+    result.style.display = 'block';
+    result.className = 'verify-banner verify-fail';
+    result.textContent = 'Verification error.';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Verify Chain Integrity';
+}
+</script>
+{% endblock %}
+{% endblock %}

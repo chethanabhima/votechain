@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Admin Login — Vote Chain{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card glass">
+    <div class="auth-header">
+      <div class="auth-icon">🔒</div>
+      <h2>Admin Access</h2>
+      <p>Restricted to authorized system administrators only.</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-error">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" class="auth-form">
+      <div class="form-group">
+        <label for="email">Admin Email</label>
+        <input type="email" id="email" name="email" placeholder="admin@votechain.com"
+               required class="form-input"/>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required class="form-input"/>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Access Admin Panel
+      </button>
+    </form>
+  </div>
+  <a href="{{ url_for('index') }}" class="back-link">← Back to Home</a>
+</div>
+{% endblock %}

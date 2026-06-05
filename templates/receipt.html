@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Vote Receipt — Vote Chain{% endblock %}
+
+{% block content %}
+<div class="receipt-page">
+  <div class="receipt-card glass">
+    <div class="receipt-header">
+      <div class="receipt-checkmark">✓</div>
+      <h2>Vote Recorded</h2>
+      <p>Your vote has been securely submitted and recorded.</p>
+    </div>
+
+    <div class="receipt-body">
+      <div class="receipt-row">
+        <span class="receipt-label">Voter</span>
+        <span class="receipt-value">{{ name }}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Selection</span>
+        <span class="receipt-value accent">{{ vote.candidate }}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Status</span>
+        <span class="receipt-value" style="color:var(--green)">✓ Confirmed</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Reference ID</span>
+        <span class="receipt-value mono">#{{ vote.block_id }}</span>
+      </div>
+    </div>
+
+    <div class="receipt-notice">
+      Your vote has been securely processed. The system guarantees your vote is
+      counted accurately and cannot be altered.
+    </div>
+
+    <div class="receipt-actions">
+      <a href="{{ url_for('voter_logout') }}" class="btn btn-primary">Done</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

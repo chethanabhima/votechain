@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Audit Center — Vote Chain{% endblock %}
+
+{% block content %}
+<div class="audit-page">
+  <div class="page-header">
+    <h2>🔍 Audit Center</h2>
+    <p>Comprehensive security and integrity monitoring for the voting system.</p>
+  </div>
+
+  <!-- A. Authentication Audit -->
+  <section class="audit-section glass">
+    <h3>A. Authentication Audit</h3>
+
+    <div class="audit-subsection">
+      <h4>Failed Login Attempts <span class="badge badge-warn">{{ failed_logins|length }}</span></h4>
+      {% if failed_logins %}
+      <div class="table-wrap">
+        <table class="audit-table">
+          <thead><tr><th>Voter ID</th><th>IP Address</th><th>Timestamp</th></tr></thead>
+          <tbody>
+          {% for log in failed_logins[:10] %}
+          <tr>
+            <td class="mono">{{ log.voter_id }}</td>
+            <td class="mono">{{ log.ip_address or '—' }}</td>
+            <td class="mono small">{{ log.timestamp[:19].replace('T',' ') }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="no-data">No failed login attempts recorded.</p>
+      {% endif %}
+    </div>
+
+    <div class="audit-subsection">
+      <h4>Suspicious Activity <span class="badge badge-red">{{ suspicious|length }}</span></h4>
+      {% if suspicious %}
+      <div class="table-wrap">
+        <table class="audit-table">
+          <thead><tr><th>Voter ID</th><th>Failed Attempts</th><th>Status</th></tr></thead>
+          <tbody>
+          {% for s in suspicious %}
+          <tr>
+            <td class="mono">{{ s.voter_id }}</td>
+            <td class="mono">{{ s.cnt }}</td>
+            <td><span class="status-badge status-warn">Suspicious</span></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="no-data">No suspicious activity detected.</p>
+      {% endif %}
+    </div>
+
+    <div class="audit-subsection">
+      <h4>Locked Accounts <span class="badge badge-red">{{ locked_accounts|length }}</span></h4>
+      {% if locked_accounts %}
+      <div class="table-wrap">
+        <table class="audit-table">
+          <thead><tr><th>Voter ID</th><th>Name</th><th>Failed Attempts</th><th>Status</th></tr></thead>
+          <tbody>
+          {% for acc in locked_accounts %}
+          <tr>
+            <td class="mono">{{ acc.voter_id }}</td>
+            <td>{{ acc.name }}</td>
+            <td class="mono">{{ acc.failed_attempts }}</td>
+            <td><span class="status-badge status-red">LOCKED</span></td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="no-data">No locked accounts.</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- B. Duplicate Vote Detection -->
+  <section class="audit-section glass">
+    <h3>B. Duplicate Vote Detection</h3>
+    {% if vote_counts %}
+    <div class="table-wrap">
+      <table class="audit-table">
+        <thead><tr><th>Voter Hash</th><th>Vote Count</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for vc in vote_counts %}
+        <tr>
+          <td class="mono small">{{ vc.voter_hash }}</td>
+          <td class="mono">{{ vc.vote_count }}</td>
+          <td>
+            {% if vc.vote_count > 1 %}
+              <span class="status-badge status-red">Duplicate Vote Rejected</span>
+            {% else %}
+              <span class="status-badge status-green">OK</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="no-data">No votes recorded yet.</p>
+    {% endif %}
+
+    {% if dup_events %}
+    <div class="audit-subsection">
+      <h4>Duplicate Vote Events</h4>
+      <div class="table-wrap">
+        <table class="audit-table">
+          <thead><tr><th>Voter ID</th><th>Detail</th><th>Timestamp</th></tr></thead>
+          <tbody>
+          {% for e in dup_events %}
+          <tr>
+            <td class="mono">{{ e.voter_id }}</td>
+            <td>{{ e.detail }}</td>
+            <td class="mono small">{{ e.timestamp[:19].replace('T',' ') }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- C. Signature Verification -->
+  <section class="audit-section glass">
+    <h3>C. Signature Verification</h3>
+    {% if votes %}
+    <div class="table-wrap">
+      <table class="audit-table">
+        <thead><tr><th>Vote ID</th><th>Voter Hash</th><th>Block #</th><th>Signature Status</th></tr></thead>
+        <tbody>
+        {% for v in votes %}
+        <tr>
+          <td class="mono">#{{ v.id }}</td>
+          <td class="mono small">{{ v.voter_hash[:24] }}…</td>
+          <td class="mono">{{ v.block_id }}</td>
+          <td>
+            {% if v.sig_valid %}
+              <span class="status-badge status-green">✓ VALID</span>
+            {% else %}
+              <span class="status-badge status-red">✗ INVALID</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="no-data">No votes to verify yet.</p>
+    {% endif %}
+  </section>
+
+  <!-- D. Blockchain Integrity -->
+  <section class="audit-section glass">
+    <h3>D. Blockchain Integrity</h3>
+    <div class="integrity-status {{ 'integrity-ok' if chain_valid else 'integrity-fail' }}">
+      <div class="integrity-icon">{{ '✓' if chain_valid else '✗' }}</div>
+      <div class="integrity-text">
+        <strong>{{ 'HEALTHY' if chain_valid else 'CORRUPTED' }}</strong>
+        <p>{{ chain_msg }}</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Already Voted — Vote Chain{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card glass">
+    <div class="auth-header">
+      <div class="auth-icon">⚠️</div>
+      <h2>Vote Already Cast</h2>
+      <p><strong>{{ name }}</strong>, our records show a vote has already been registered for this voter ID.</p>
+    </div>
+    <div class="alert alert-warning">
+      Each voter may only cast one ballot. Duplicate vote attempts are logged and reviewed by the Audit Center.
+    </div>
+    <div class="receipt-actions" style="margin-top:1.5rem">
+      <a href="{{ url_for('explorer') }}" class="btn btn-ghost">Blockchain Explorer</a>
+      <a href="{{ url_for('voter_logout') }}" class="btn btn-primary">Logout</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

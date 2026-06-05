@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — Vote Chain{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+  <div class="page-header">
+    <h2>⚙️ Admin Dashboard</h2>
+    <p>System overview and vote results.</p>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card glass">
+      <div class="stat-num">{{ total_votes }}</div>
+      <div class="stat-label">Total Votes Cast</div>
+    </div>
+    <div class="stat-card glass">
+      <div class="stat-num">{{ total_voters }}</div>
+      <div class="stat-label">Registered Voters</div>
+    </div>
+    <div class="stat-card glass">
+      <div class="stat-num">{{ blocks|length }}</div>
+      <div class="stat-label">Blockchain Blocks</div>
+    </div>
+    <div class="stat-card glass">
+      <div class="stat-num">{{ ((total_votes / total_voters * 100) | round(1)) if total_voters else 0 }}%</div>
+      <div class="stat-label">Voter Turnout</div>
+    </div>
+  </div>
+
+  <!-- Tally -->
+  <section class="admin-section glass">
+    <h3>📊 Votes per Candidate</h3>
+    <div class="tally-grid">
+      {% for candidate, count in tally.items() %}
+      <div class="tally-item">
+        <div class="tally-candidate">{{ candidate }}</div>
+        <div class="tally-bar-wrap">
+          <div class="tally-bar" style="width: {{ (count / total_votes * 100) if total_votes else 0 }}%"></div>
+        </div>
+        <div class="tally-count">{{ count }} vote{{ 's' if count != 1 else '' }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Vote Records — no voter identity shown -->
+  <section class="admin-section glass">
+    <h3>🗳️ Vote Records</h3>
+    <p class="section-note">Voter identities are anonymised. Each entry corresponds to one encrypted ballot.</p>
+    {% if votes %}
+    <div class="table-wrap">
+      <table class="audit-table">
+        <thead><tr>
+          <th>Record #</th>
+          <th>Block</th>
+          <th>Encrypted Vote</th>
+          <th>Signature</th>
+          <th>Timestamp</th>
+        </tr></thead>
+        <tbody>
+        {% for v in votes %}
+        <tr>
+          <td class="mono">#{{ v.id }}</td>
+          <td class="mono">{{ v.block_id }}</td>
+          <td class="mono small">
+            {{ v.encrypted_vote[:40] }}…
+            <button class="btn-inline" onclick="toggleCipher({{ v.id }})">show</button>
+            <div id="cipher-{{ v.id }}" class="cipher-full mono" style="display:none">{{ v.encrypted_vote }}</div>
+          </td>
+          <td>
+            {% if v.sig_valid %}
+              <span class="status-badge status-green">✓ VALID</span>
+            {% else %}
+              <span class="status-badge status-red">✗ INVALID</span>
+            {% endif %}
+          </td>
+          <td class="mono small">{{ v.timestamp[:19].replace('T',' ') }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="no-data">No votes recorded yet.</p>
+    {% endif %}
+  </section>
+
+  <!-- Blockchain Blocks -->
+  <section class="admin-section glass">
+    <h3>⛓️ Blockchain Blocks</h3>
+    <div class="table-wrap">
+      <table class="audit-table">
+        <thead><tr>
+          <th>Block</th>
+          <th>Current Hash</th>
+          <th>Previous Hash</th>
+          <th>Timestamp</th>
+        </tr></thead>
+        <tbody>
+        {% for b in blocks %}
+        <tr>
+          <td class="mono">{{ 'GENESIS' if b.block_id == 0 else '#' + b.block_id|string }}</td>
+          <td class="mono small accent">{{ b.current_hash[:28] }}…</td>
+          <td class="mono small">{{ b.previous_hash[:28] }}…</td>
+          <td class="mono small">{{ b.timestamp[:19].replace('T',' ') }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <a href="{{ url_for('explorer') }}" class="btn btn-ghost" style="margin-top:1rem">Full Blockchain Explorer →</a>
+  </section>
+
+  <div class="admin-links">
+    <a href="{{ url_for('audit') }}" class="btn btn-primary">Audit Center</a>
+    <a href="{{ url_for('explorer') }}" class="btn btn-ghost">Blockchain Explorer</a>
+    <a href="{{ url_for('admin_logout') }}" class="btn btn-ghost btn-danger">Logout</a>
+  </div>
+</div>
+
+{% block scripts %}
+<script>
+function toggleCipher(id) {
+  const el = document.getElementById('cipher-' + id);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+{% endblock %}
+{% endblock %}

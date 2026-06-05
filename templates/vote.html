@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Cast Vote — Vote Chain{% endblock %}
+
+{% block content %}
+<div class="vote-page">
+  <div class="vote-header">
+    <h2>Secure Ballot</h2>
+    <p>Welcome, <strong>{{ name }}</strong>. Select your candidate below.</p>
+  </div>
+
+  {% if error %}
+  <div class="alert alert-error">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST" id="vote-form" class="ballot-form">
+    <div class="candidates">
+      {% for candidate in candidates %}
+      <label class="candidate-card glass" for="c{{ loop.index }}">
+        <input type="radio" name="candidate" id="c{{ loop.index }}" value="{{ candidate }}" required/>
+        <div class="candidate-inner">
+          <div class="candidate-avatar">{{ candidate[0] }}</div>
+          <div class="candidate-info">
+            <span class="candidate-name">{{ candidate }}</span>
+            <span class="candidate-label">Candidate {{ loop.index }}</span>
+          </div>
+          <div class="candidate-check">✓</div>
+        </div>
+      </label>
+      {% endfor %}
+    </div>
+
+    <div class="vote-security-info glass">
+      <div class="sec-row">
+        <span class="sec-label">Transmission</span>
+        <span class="sec-value sec-green">🔒 Encrypted</span>
+      </div>
+      <div class="sec-row">
+        <span class="sec-label">Integrity</span>
+        <span class="sec-value sec-green">✓ Verified</span>
+      </div>
+      <div class="sec-row">
+        <span class="sec-label">Ledger</span>
+        <span class="sec-value sec-green">⛓ Immutable</span>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-full btn-lg" id="submit-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      Submit Vote
+    </button>
+    <p class="vote-notice">⚠️ Your vote is final and cannot be changed after submission.</p>
+  </form>
+</div>
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.candidate-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.candidate-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+  });
+});
+</script>
+{% endblock %}
+{% endblock %}

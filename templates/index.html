@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Vote Chain — Secure Digital Ballot System{% endblock %}
+{% block main_class %}home-main{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-badge"><span class="dot"></span> Blockchain Secured</div>
+  <h1 class="hero-title">
+    <span class="title-vote">VOTE</span>
+    <span class="title-chain">CHAIN</span>
+  </h1>
+  <p class="hero-sub">Secure Digital Ballot System</p>
+  <p class="hero-desc">
+    Cryptographically secured voting powered by RSA encryption,
+    SHA-256 hashing, and an immutable blockchain ledger.
+  </p>
+
+  <div class="hero-actions">
+    <a href="{{ url_for('voter_login') }}" class="btn btn-primary">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Cast Your Vote
+    </a>
+    <a href="{{ url_for('admin_login') }}" class="btn btn-ghost">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Admin Access
+    </a>
+  </div>
+</section>
+
+<section class="features">
+  <div class="feature-card" style="--i:0">
+    <div class="feature-icon">🔐</div>
+    <h3>RSA Encryption</h3>
+    <p>Every vote encrypted with 2048-bit RSA public key cryptography before transmission.</p>
+  </div>
+  <div class="feature-card" style="--i:1">
+    <div class="feature-icon">⛓️</div>
+    <h3>Immutable Chain</h3>
+    <p>Each vote forms a block linked by SHA-256 hashes — tampering is detectable instantly.</p>
+  </div>
+  <div class="feature-card" style="--i:2">
+    <div class="feature-icon">✍️</div>
+    <h3>Digital Signatures</h3>
+    <p>Votes are signed and verified — forged or altered votes are rejected automatically.</p>
+  </div>
+  <div class="feature-card" style="--i:3">
+    <div class="feature-icon">🔍</div>
+    <h3>Full Audit Trail</h3>
+    <p>Every login, vote, and security event logged and available in the Audit Center.</p>
+  </div>
+</section>
+
+<div class="home-links">
+  <a href="{{ url_for('explorer') }}" class="link-pill">Blockchain Explorer →</a>
+  <a href="{{ url_for('audit') }}" class="link-pill">Audit Center →</a>
+</div>
+{% endblock %}
