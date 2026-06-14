@@ -64,7 +64,7 @@ class Blockchain:
         for i in range(1, len(blocks)):
             current = blocks[i]
             previous = blocks[i - 1]
-            # Recompute hash
+            
             block_data = json.dumps({
                 "block_id": current["block_id"],
                 "voter_hash": current["voter_hash"],
