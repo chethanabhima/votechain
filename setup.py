@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 Vote Chain — Setup Script
 Run this once before starting the app.
@@ -10,10 +10,8 @@ print("=" * 50)
 print("  VOTE CHAIN — Setup")
 print("=" * 50)
 
-# Ensure instance dir
 os.makedirs("instance", exist_ok=True)
 
-# Init DB, keys, genesis block
 try:
     from database import init_db
     init_db()
