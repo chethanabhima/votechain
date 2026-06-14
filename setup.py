@@ -1,8 +1,4 @@
 
-"""
-Vote Chain — Setup Script
-Run this once before starting the app.
-"""
 import os
 import sys
 
