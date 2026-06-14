@@ -37,13 +37,11 @@ def get_last_block():
     return dict(row) if row else None
 
 
-# ─── HOME ───────────────────────────────────────────────────────────────────
 @app.route("/")
 def index():
     return render_template("index.html")
 
 
-# ─── VOTER LOGIN ─────────────────────────────────────────────────────────────
 @app.route("/voter-login", methods=["GET", "POST"])
 def voter_login():
     if request.method == "POST":
@@ -54,7 +52,6 @@ def voter_login():
         conn = get_db()
         voter = conn.execute("SELECT * FROM voters WHERE voter_id=?", (voter_id,)).fetchone()
 
-        # Log attempt
         conn.execute(
             "INSERT INTO login_attempts (voter_id, success, ip_address, timestamp) VALUES (?,?,?,?)",
             (voter_id, 0, ip, datetime.utcnow().isoformat())
@@ -71,7 +68,6 @@ def voter_login():
             conn.close()
             return render_template("voter_login.html", error="Account locked due to multiple failed attempts.")
 
-        # Age check
         try:
             dob_date = datetime.strptime(dob, "%Y-%m-%d").date()
             today = date.today()
@@ -97,7 +93,6 @@ def voter_login():
             return render_template("voter_login.html",
                                    error=f"Invalid credentials. {'Account locked.' if locked else f'Attempts: {failed}/{MAX_FAILED}'}")
 
-        # Success — update login attempt to success
         conn.execute("UPDATE login_attempts SET success=1 WHERE id=(SELECT MAX(id) FROM login_attempts WHERE voter_id=?)", (voter_id,))
         conn.execute("UPDATE voters SET failed_attempts=0 WHERE voter_id=?", (voter_id,))
         conn.commit()
@@ -110,8 +105,6 @@ def voter_login():
 
     return render_template("voter_login.html")
 
-
-# ─── ADMIN LOGIN ──────────────────────────────────────────────────────────────
 @app.route("/admin-login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
@@ -145,7 +138,6 @@ def audit_logout():
     return redirect(url_for("index"))
 
 
-# ─── VOTE ────────────────────────────────────────────────────────────────────
 @app.route("/vote", methods=["GET", "POST"])
 def vote():
     if "voter_id" not in session:
@@ -169,7 +161,6 @@ def vote():
         private_pem, public_pem = load_keys()
         voter_hash = hash_voter_id(voter_id)
 
-        # Duplicate check via hash
         existing = conn.execute("SELECT * FROM votes WHERE voter_hash=?", (voter_hash,)).fetchone()
         if existing:
             log_audit("DUPLICATE_VOTE", voter_id=voter_id, voter_hash=voter_hash,
@@ -177,17 +168,14 @@ def vote():
             conn.close()
             return render_template("already_voted.html", name=voter["name"])
 
-        # Encrypt and sign
         encrypted = encrypt_vote(candidate, public_pem)
         signature = sign_vote(encrypted, private_pem)
         timestamp = datetime.utcnow().isoformat()
 
-        # Get last block hash and next block_id from DB
         last_block = get_last_block()
         prev_hash = last_block["current_hash"] if last_block else "0" * 64
         next_block_id = (last_block["block_id"] + 1) if last_block else 1
 
-        # Create blockchain block
         new_block = bc.add_block(voter_hash, encrypted, signature, prev_hash, block_id=next_block_id)
 
         conn.execute(
@@ -218,7 +206,6 @@ def vote():
     return render_template("vote.html", candidates=CANDIDATES, name=voter["name"])
 
 
-# ─── RECEIPT ─────────────────────────────────────────────────────────────────
 @app.route("/receipt")
 def receipt():
     if "voter_id" not in session or "last_vote" not in session:
@@ -227,7 +214,6 @@ def receipt():
     return render_template("receipt.html", vote=vote_data, name=session.get("voter_name"))
 
 
-# ─── BLOCKCHAIN EXPLORER ─────────────────────────────────────────────────────
 @app.route("/explorer")
 def explorer():
     if not session.get("admin"):
@@ -251,13 +237,11 @@ def api_verify_chain():
     conn = get_db()
     blocks = [dict(r) for r in conn.execute("SELECT * FROM blockchain ORDER BY block_id ASC").fetchall()]
     conn.close()
-    valid, message = bc.verify_chain(blocks[1:] if blocks else [])  # skip genesis for linking
-    # Re-verify including genesis context
+    valid, message = bc.verify_chain(blocks[1:] if blocks else [])  
     valid, message = bc.verify_chain(blocks)
     return jsonify({"valid": valid, "message": message})
 
 
-# ─── AUDIT CENTER ────────────────────────────────────────────────────────────
 @app.route("/audit", methods=["GET", "POST"])
 def audit():
     if not session.get("audit_auth"):
@@ -271,7 +255,6 @@ def audit():
 
     conn = get_db()
 
-    # Auth audit
     failed_logins = [dict(r) for r in conn.execute(
         "SELECT * FROM login_attempts WHERE success=0 ORDER BY timestamp DESC LIMIT 50"
     ).fetchall()]
@@ -282,25 +265,21 @@ def audit():
         """SELECT voter_id, COUNT(*) as cnt FROM login_attempts
            WHERE success=0 GROUP BY voter_id HAVING cnt >= 3 ORDER BY cnt DESC"""
     ).fetchall()]
-
-    # Duplicate vote detection
+  
     vote_counts = [dict(r) for r in conn.execute(
         "SELECT voter_hash, COUNT(*) as vote_count FROM votes GROUP BY voter_hash"
     ).fetchall()]
     for vc in vote_counts:
         vc["status"] = "DUPLICATE VOTE REJECTED" if vc["vote_count"] > 1 else "OK"
 
-    # Signature verification
     _, public_pem = load_keys()
     votes = [dict(r) for r in conn.execute("SELECT * FROM votes").fetchall()]
     for v in votes:
         v["sig_valid"] = verify_signature(v["encrypted_vote"], v["signature"], public_pem)
 
-    # Blockchain integrity
     blocks = [dict(r) for r in conn.execute("SELECT * FROM blockchain ORDER BY block_id ASC").fetchall()]
     chain_valid, chain_msg = bc.verify_chain(blocks)
 
-    # Audit log events
     dup_events = [dict(r) for r in conn.execute(
         "SELECT * FROM audit_logs WHERE event_type='DUPLICATE_VOTE' ORDER BY timestamp DESC"
     ).fetchall()]
@@ -318,7 +297,6 @@ def audit():
     )
 
 
-# ─── ADMIN DASHBOARD ─────────────────────────────────────────────────────────
 @app.route("/admin")
 def admin_dashboard():
     if not session.get("admin"):
@@ -327,7 +305,6 @@ def admin_dashboard():
     conn = get_db()
     private_pem, public_pem = load_keys()
 
-    # Tally
     tally = {}
     for c in CANDIDATES:
         row = conn.execute("SELECT COUNT(*) as cnt FROM votes WHERE candidate=?", (c,)).fetchone()
@@ -336,14 +313,12 @@ def admin_dashboard():
     total_votes = sum(tally.values())
     total_voters = conn.execute("SELECT COUNT(*) as cnt FROM voters").fetchone()["cnt"]
 
-    # All votes — NO voter identity, only block info + encrypted vote + sig status
     votes = [dict(r) for r in conn.execute(
         "SELECT id, block_id, encrypted_vote, signature, timestamp FROM votes ORDER BY timestamp DESC"
     ).fetchall()]
     for v in votes:
         v["sig_valid"] = verify_signature(v["encrypted_vote"], v["signature"], public_pem)
 
-    # Blockchain
     blocks = [dict(r) for r in conn.execute("SELECT * FROM blockchain ORDER BY block_id ASC").fetchall()]
 
     conn.close()
