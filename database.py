@@ -68,7 +68,6 @@ def init_db():
         );
     """)
 
-    # Sample voters: voter_id, name, dob (YYYY-MM-DD)
     sample_voters = [
         ("VC001", "Arjun Sharma",     "1990-03-15"),
         ("VC002", "Priya Nair",       "1985-07-22"),
@@ -83,7 +82,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-    # Generate and store RSA keys if not present
     if not os.path.exists(KEYS_PATH):
         private_pem, public_pem = generate_rsa_keys()
         with open(KEYS_PATH, "w") as f:
@@ -92,7 +90,6 @@ def init_db():
             f.write("PUBLIC_KEY\n")
             f.write(public_pem)
     
-    # Add genesis block if chain is empty
     conn = get_db()
     c = conn.cursor()
     count = c.execute("SELECT COUNT(*) FROM blockchain").fetchone()[0]
